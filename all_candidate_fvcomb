@@ -53,7 +53,7 @@ else
     if num_o_free==ia(1,1) % be carefule with k:
         k=1;
     else
-        k=num_o_free-range(1)+1; % +1是因为计个数，注意是计个数还是计距离
+        k=num_o_free-range(1)+1; 
     end
     
     
