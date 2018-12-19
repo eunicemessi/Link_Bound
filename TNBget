@@ -1,0 +1,31 @@
+%% Input: an argumented matrix (with non-identifiable variable) 
+%% Output: the TNB of every variable (as the same order coming in)
+
+function TNB=tnbget(A)
+A_width=size(A,2);
+A_height=size(A,1);
+
+% take the last column of A
+Meas_V=A(:,A_width);
+% find the max value of this column
+max_m_v=max(Meas_V);
+
+% create a vector to store the TNB of each variable (as coming in order)
+TNB=zeros(A_width-1,1);
+
+
+for i=1:A_width-1
+    temp=max_m_v;
+    for j=1:A_height
+        if A(j,i)==1
+            if A(j,A_width)<temp
+                temp=A(j,A_width);
+            end
+        end
+        TNB(i,1)=temp;
+    end
+end
+
+end
+
+%% Note that if there is a column with all zeros, then its TNB is the maximum value of the measurement value (but in real situation, it is identifibale)
