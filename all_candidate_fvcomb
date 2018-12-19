@@ -1,0 +1,80 @@
+%% Input 1: the TNB of orginal ordered variable in the argumented matrix
+%% Input 2: the argumented measurement matrix
+%% Output: all candidate free variable combination
+
+
+function all_cdd=a_cdd(tnb,A)
+tnb_height=size(tnb,1); % how many variables do we have
+
+[TNB_sorted,I_TNB_sorted]=sort(tnb);
+a=A(:,1:(end-1)); % rank of measurement matrix is not equal to the argumented matrix
+r=rank(a);
+num_o_free=tnb_height-r;
+
+%% unique TNB_sort
+[~,ia,~]=unique(TNB_sorted); % each number in ia is the first index for one TNB sub-group
+
+%% now find num_o_free lies in which sub-group (that has the same TNB)
+range=[0,0]; % initilize a row vector to store the target sub-group's (num_o-free cuts in) first and last index
+lenth_ia=size(ia,1);
+
+if ia(2,1)>num_o_free % very special case: when num_o_free cuts in the first sub-group
+    range=[ia(1,1),ia(2,1)-1]; % when it comes to range, should not include the first index in the next sub-group, btw, ia(1,1) must equal to
+elseif num_o_free>=ia(lenth_ia-1)
+    if ia(lenth_ia-1)==num_o_free % check if num_o_free is exactly at the last sub-group's first index
+        range=[lenth_ia-1,lenth_ia-1];
+    else
+        range=[ia(lenth_ia-1,1),ia(lenth_ia,1)]; % else, num_o_free cuts in the last sub-group in somewhere middle
+    end
+    
+else
+    for i=2:lenth_ia-1 % from 2 to lenth_ia-1, be very careful for the boundary condition!!! 1 and lenth_ia does not work!
+        if ia(i,1)==num_o_free
+            range=[ia(i,1),ia(i,1)];
+            break
+        elseif ia(i,1)<num_o_free<ia(i+1,1)
+            range=[ia(i,1),ia(i+1,1)-1];
+            break
+        end
+    end
+    
+end
+
+%% If num_o_free matches the blocks' boundary, then just extract the first num_o_free in tnb
+if range(1)==range(2)
+    all_cdd=I_TNB_sorted; % no need to shuffle
+    
+    %% else need get all the possible combinations
+else
+    % If num_o_free does not match the blocks' boundary, take out the the range's corresponding index in I_TNB_sorted
+    target_i_b=I_TNB_sorted(range(1):range(2),1); % target index block
+    
+    
+    if num_o_free==ia(1,1) % be carefule with k:
+        k=1;
+    else
+        k=num_o_free-range(1)+1; % +1是因为计个数，注意是计个数还是计距离
+    end
+    
+    
+    comb=combntns(target_i_b,k); % all the combinations of target idx block as rows
+    
+    n_comb=size(comb,1); % how many combinations do we have
+    
+    % prepare the other part (except the target idx block) in all_cdd
+    all_cdd=repmat(I_TNB_sorted,1,n_comb); % just repeat I_TNB_sorted
+    
+    
+    all_cdd_b=zeros(range(2)-range(1)+1,n_comb); % to store all the combinations of the target idx block
+    
+    % inserting the all combinations to to all_cdd_b
+    for i=1:n_comb
+        all_cdd_b(:,i)=[comb(i,:)';setdiff(I_TNB_sorted(range(1):range(2),1),comb(i,:))];
+    end
+    
+    % inserting all_cdd_b to all_cdd
+    all_cdd(range(1):range(2),1:n_comb)=all_cdd_b(range(1):range(2),1:n_comb);
+    
+end
+
+end
